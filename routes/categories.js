@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 let { dataCategories, dataProducts } = require('../utils/data')
 let slugify = require('slugify');
-let { GenID } = require('../utils/idHandler')
+let { GenID, getItemByID } = require('../utils/idHandler')
 //R CUD
 /* GET users listing. */
 router.get('/', function (req, res, next) {
