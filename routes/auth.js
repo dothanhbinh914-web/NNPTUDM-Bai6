@@ -4,6 +4,7 @@ let userController = require('../controllers/users')
 let bcrypt = require('bcrypt')
 let jwt = require('jsonwebtoken')
 let fs = require('fs');
+const privateKey = fs.readFileSync('./keys/private.pem');
 const { CheckLogin } = require("../utils/authHandler");
 
 router.post('/register', async function (req, res, next) {
@@ -39,7 +40,8 @@ router.post('/login', async function (req, res, next) {
             await user.save()
             let token = jwt.sign({
                 id: user._id
-            }, 'secret', {
+            }, privateKey, {
+                algorithm: 'RS256',
                 expiresIn: '1h'
             })
             res.send(token)
@@ -63,6 +65,40 @@ router.post('/login', async function (req, res, next) {
 })
 router.get('/me',CheckLogin,function(req,res,next){
     res.send(req.user)
+})
+
+router.post('/change-password', CheckLogin, async function (req, res) {
+    try {
+        let { oldpassword, newpassword } = req.body;
+
+        // Validate newpassword
+        if (!newpassword || newpassword.length < 6) {
+            return res.status(400).send({ message: "Mat khau moi phai co it nhat 6 ky tu" });
+        }
+        if (!/[A-Z]/.test(newpassword)) {
+            return res.status(400).send({ message: "Mat khau moi phai co it nhat 1 chu hoa" });
+        }
+        if (!/[0-9]/.test(newpassword)) {
+            return res.status(400).send({ message: "Mat khau moi phai co it nhat 1 chu so" });
+        }
+        if (!/[!@#$%^&*]/.test(newpassword)) {
+            return res.status(400).send({ message: "Mat khau moi phai co it nhat 1 ky tu dac biet (!@#$%^&*)" });
+        }
+
+        // Check old password
+        let isMatch = bcrypt.compareSync(oldpassword, req.user.password);
+        if (!isMatch) {
+            return res.status(400).send({ message: "Mat khau cu khong dung" });
+        }
+
+        // Hash and save new password
+        req.user.password = bcrypt.hashSync(newpassword, 10);
+        await req.user.save();
+
+        res.send({ message: "Doi mat khau thanh cong" });
+    } catch (error) {
+        res.status(500).send({ message: error.message });
+    }
 })
 
 
