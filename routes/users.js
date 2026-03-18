@@ -3,10 +3,10 @@ var router = express.Router();
 let userModel = require("../schemas/users");
 let { CreateAnUserValidator, validatedResult, ModifyAnUser } = require('../utils/validateHandler')
 let userController = require('../controllers/users')
+let {CheckLogin} = require('../utils/authHandler')
 
-
-router.get("/", async function (req, res, next) {
-  let users =  await userController.GetAllUser()
+router.get("/", CheckLogin, async function (req, res, next) {
+  let users = await userController.GetAllUser()
   res.send(users);
 });
 
@@ -28,8 +28,8 @@ router.get("/:id", async function (req, res, next) {
 router.post("/", CreateAnUserValidator, validatedResult, async function (req, res, next) {
   try {
     let newItem = await userController.CreateAnUser(
-      req.body.username,req.body.password,req.body.email,req.body.role,
-      req.body.fullName,req.body.avatarUrl,req.body.status, req.body.loginCount
+      req.body.username, req.body.password, req.body.email, req.body.role,
+      req.body.fullName, req.body.avatarUrl, req.body.status, req.body.loginCount
     )
     // populate cho đẹp
     let saved = await userModel
@@ -40,7 +40,7 @@ router.post("/", CreateAnUserValidator, validatedResult, async function (req, re
   }
 });
 
-router.put("/:id",ModifyAnUser,validatedResult,async function (req, res, next) {
+router.put("/:id", ModifyAnUser, validatedResult, async function (req, res, next) {
   try {
     let id = req.params.id;
     let updatedItem = await userModel.findByIdAndUpdate(id, req.body, { new: true });

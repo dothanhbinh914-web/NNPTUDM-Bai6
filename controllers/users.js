@@ -28,6 +28,14 @@ module.exports = {
                 username: username
             })
         return user;
+    },
+    GetAnUserById: async function (id) {
+        let user = await userModel
+            .findOne({
+                isDeleted: false,
+                _id: id
+            })
+        return user;
     }
 
 }
